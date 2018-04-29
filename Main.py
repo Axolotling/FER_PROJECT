@@ -52,16 +52,30 @@ def Wycinanie_twarzy_z_klatek(licznik):
     cv.destroyAllWindows()
 
 #############################################################################
-def Wczytaj_Do_Nauki(path):
+def Test_klasyfikacji(path):
     if not os.path.exists('.\\DataSet\\'):
         os.makedirs('.\\DataSet\\')
+    if not os.path.exists('.\\DataSet\\0\\'):
+        os.makedirs('.\\DataSet\\0\\')
+    if not os.path.exists('.\\DataSet\\1\\'):
+        os.makedirs('.\\DataSet\\1\\')
+    if not os.path.exists('.\\DataSet\\2\\'):
+        os.makedirs('.\\DataSet\\2\\')
+    if not os.path.exists('.\\DataSet\\3\\'):
+        os.makedirs('.\\DataSet\\3\\')
+    if not os.path.exists('.\\DataSet\\4\\'):
+        os.makedirs('.\\DataSet\\4\\')
+    if not os.path.exists('.\\DataSet\\5\\'):
+        os.makedirs('.\\DataSet\\5\\')
+    if not os.path.exists('.\\DataSet\\6\\'):
+        os.makedirs('.\\DataSet\\6\\')
     count = len(open(path, 'rU').readlines())
     number = 1
     licznik = 35887
     blank_image = np.zeros((48, 48), np.uint8)
     while (number <= licznik):
         wiersz = linecache.getline(path, number)
-
+        desired = wiersz[0]
         wiersz = wiersz[wiersz.find(",") + 1:]
         wiersz = wiersz[:wiersz.find(",")]
 
@@ -70,7 +84,7 @@ def Wczytaj_Do_Nauki(path):
         for y in range(0, 48):
             for x in range(0, 48):
                 blank_image[y][x] = val[48 * y + x]
-        cv.imwrite('.\\DataSet\\' + str(number) + ".jpg", blank_image)
+        cv.imwrite('.\\DataSet\\' + str(desired) + "\\"+ str(number) + ".jpg", blank_image)
         number=number+1
     print("przetworzono wszystkie obrazy")
     cv.waitKey(0)
@@ -78,6 +92,6 @@ def Wczytaj_Do_Nauki(path):
 path_film = '.\\Filmy\\MOV.mp4'
 path_dataset = '.\\dataset.csv'
 
-liczba_klatek = Wycinanie_klatek_z_filmu(path_film,5)
-Wycinanie_twarzy_z_klatek(liczba_klatek)
-Wczytaj_Do_Nauki(path_dataset)
+#liczba_klatek = Wycinanie_klatek_z_filmu(path_film,5)
+#Wycinanie_twarzy_z_klatek(liczba_klatek)
+Test_klasyfikacji(path_dataset)
