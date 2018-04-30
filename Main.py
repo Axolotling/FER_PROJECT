@@ -1,7 +1,10 @@
+import csv
 import numpy as np
 import cv2 as cv
 import os
 import linecache
+import tensorflow as tf
+
 #######################Wycinanie klatek z filmu######################################################
 def Wycinanie_klatek_z_filmu(path_video,freq):
     if not os.path.exists('.\\Klatki\\'):
@@ -51,7 +54,7 @@ def Wycinanie_twarzy_z_klatek(licznik):
     cv.waitKey(0)
     cv.destroyAllWindows()
 
-#############################################################################
+############################Test_klasyfikacji###################################
 def Test_klasyfikacji(path):
     if not os.path.exists('.\\DataSet\\'):
         os.makedirs('.\\DataSet\\')
@@ -71,7 +74,7 @@ def Test_klasyfikacji(path):
         os.makedirs('.\\DataSet\\6\\')
     count = len(open(path, 'rU').readlines())
     number = 1
-    licznik = 35887
+    licznik = 547*7
     blank_image = np.zeros((48, 48), np.uint8)
     while (number <= licznik):
         wiersz = linecache.getline(path, number)
@@ -88,10 +91,30 @@ def Test_klasyfikacji(path):
         number=number+1
     print("przetworzono wszystkie obrazy")
     cv.waitKey(0)
-#############################################################################
+###############################Przygotowanie_danych##################################
+def extract_data_from_file(path):
+    N_EPOCHS = 1
+    BATCH_SIZE = 10
+    with open(path) as csv_file:
+        n_rows = N_EPOCHS * BATCH_SIZE
+        row_counter = 0
+        readcsv = csv.reader(csv_file, delimiter=',')
+        for row in readcsv:
+            row_counter += 1
+            tmp_list = [0, 0, 0, 0, 0, 0, 0]
+            tmp_list[int(row[0])] = 1
+            Y.append(tmp_list)
+            X.append(list(map(int, row[1].split())))
+            if (row_counter >= n_rows):
+                print("przetworzono dane")
+                return
+######################################################################################
 path_film = '.\\Filmy\\MOV.mp4'
 path_dataset = '.\\dataset.csv'
 
 #liczba_klatek = Wycinanie_klatek_z_filmu(path_film,5)
 #Wycinanie_twarzy_z_klatek(liczba_klatek)
-Test_klasyfikacji(path_dataset)
+#Test_klasyfikacji(path_dataset)
+Y = []
+X = []
+extract_data_from_file(path_dataset)
