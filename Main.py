@@ -54,7 +54,7 @@ def Wycinanie_twarzy_z_klatek(licznik):
     cv.waitKey(0)
     cv.destroyAllWindows()
 
-############################Test_klasyfikacji###################################
+############################Test_klasyfikacji########################################################
 def Test_klasyfikacji(path):
     if not os.path.exists('.\\DataSet\\'):
         os.makedirs('.\\DataSet\\')
@@ -91,7 +91,8 @@ def Test_klasyfikacji(path):
         number=number+1
     print("przetworzono wszystkie obrazy")
     cv.waitKey(0)
-###############################Przygotowanie_danych##################################
+    cv.destroyAllWindows()
+###############################Przygotowanie_danych##################################################
 def extract_data_from_file(path):
     N_EPOCHS = 1
     BATCH_SIZE = 10
@@ -108,7 +109,40 @@ def extract_data_from_file(path):
             if (row_counter >= n_rows):
                 print("przetworzono dane")
                 return
-######################################################################################
+###############Obraz z kamerki i zapisywanie zdjec z niej############################################
+def kamerka():
+    try:
+        cap = cv.VideoCapture(0)
+        cap.set(3, 640)  # WIDTH
+        cap.set(4, 480)  # HEIGHT
+        face_cascade = cv.CascadeClassifier('.\\venv\\Lib\\site-packages\\cv2\\data\\haarcascade_frontalface_default.xml')
+        i = 0
+
+    except:
+        print("problem opening input stream")
+        exit(1)
+
+    while (i < 20):
+        # Capture frame-by-frame
+        ret, frame = cap.read()
+        if not ret:  # if return code is bad, abort.
+            exit(0)
+        # Our operations on the frame come here
+        gray = cv.cvtColor(frame, cv.COLOR_BGR2GRAY)
+        faces = face_cascade.detectMultiScale(gray, 1.3, 5)
+        print(len(faces))
+
+        for (x, y, w, h) in faces:
+            cv.rectangle(frame, (x, y), (x + w, y + h), (255, 0, 0), 2)
+
+        cv.imshow('frame', frame)
+        cv.imwrite("image%04i.jpg" % i, frame)
+        i += 1
+        if cv.waitKey(1) & 0xFF == ord('q'):
+            break
+    cap.release()
+    cv.destroyAllWindows()
+#####################################################################################################
 path_film = '.\\Filmy\\MOV.mp4'
 path_dataset = '.\\dataset.csv'
 
