@@ -17,7 +17,7 @@ def Wycinanie_klatek_z_filmu(path_video,freq):
         if frame is None:
             break
         img = cv.cvtColor(frame, cv.COLOR_BGR2GRAY)
-        #3 nastepne linijki sa potrzebne tylko dla filmow nagrywanych pionowo
+        #3 nastepne linijki sa potrzebne tylko dla filmow nagrywanych pionowo, a kamerki są poziomo (do testow)
         rows, cols = img.shape
         M = cv.getRotationMatrix2D((cols / 2, rows / 2), 90, 1)
         img = cv.warpAffine(img, M, (cols, rows))
@@ -36,7 +36,6 @@ def Wycinanie_twarzy_z_klatek(licznik):
     path2='.\\Mordka\\'
     if not os.path.exists(path2):
         os.makedirs(path2)
-    Face = []
     face_cascade = cv.CascadeClassifier('.\\venv\\Lib\\site-packages\\cv2\\data\\haarcascade_frontalface_default.xml')
     number = 1
     while(number<licznik):
@@ -46,9 +45,6 @@ def Wycinanie_twarzy_z_klatek(licznik):
             crop_img = img[y:y + h, x:x + w]
             scaled_img = cv.resize(crop_img, (48,48), cv.INTER_CUBIC)
             cv.imwrite(path2 + str(number) + ".jpg", scaled_img)
-        for i in range(48):
-            for j in range(48):
-                Face.append(scaled_img[i][j][0])
         number=number+1
     print("ukonczono wycinanie twarzy z klatek")
     cv.waitKey(0)
@@ -81,7 +77,6 @@ def Test_klasyfikacji(path):
         desired = wiersz[0]
         wiersz = wiersz[wiersz.find(",") + 1:]
         wiersz = wiersz[:wiersz.find(",")]
-
         pixels = wiersz.split(" ")
         val = list(map(int, pixels))
         for y in range(0, 48):
@@ -94,8 +89,8 @@ def Test_klasyfikacji(path):
     cv.destroyAllWindows()
 ###############################Przygotowanie_danych##################################################
 def extract_data_from_file(path):
-    N_EPOCHS = 1
-    BATCH_SIZE = 10
+    N_EPOCHS = 1  #byle co tu wpisalem zeby sie kompilowalo
+    BATCH_SIZE = 10 #byle co tu wpisalem zeby sie kompilowalo
     with open(path) as csv_file:
         n_rows = N_EPOCHS * BATCH_SIZE
         row_counter = 0
@@ -146,9 +141,9 @@ def kamerka():
 path_film = '.\\Filmy\\MOV.mp4'
 path_dataset = '.\\dataset.csv'
 
-#liczba_klatek = Wycinanie_klatek_z_filmu(path_film,5)
-#Wycinanie_twarzy_z_klatek(liczba_klatek)
-#Test_klasyfikacji(path_dataset)
+liczba_klatek = Wycinanie_klatek_z_filmu(path_film,5)
+Wycinanie_twarzy_z_klatek(liczba_klatek)
+Test_klasyfikacji(path_dataset)
 Y = []
 X = []
 extract_data_from_file(path_dataset)
