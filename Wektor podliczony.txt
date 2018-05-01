@@ -1,0 +1,5 @@
+Podliczony wektor
+[4953,547,5121,8989,6077,4002,6198]
+
+W przypadku przycietych danych
+[547,547,547,547,547,547,547]
