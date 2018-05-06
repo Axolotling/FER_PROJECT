@@ -3,6 +3,7 @@ import numpy as np
 import cv2 as cv
 import os
 import linecache
+import model.py
 ########################################################################################################################
 
 
@@ -55,7 +56,8 @@ def cut_frames(path_video, freq):
 
 def cut_faces(frames, sizex, sizey):
     create_directory('.\\Faces\\')
-    face_cascade = cv.CascadeClassifier('.\\venv\\Lib\\site-packages\\cv2\\data\\haarcascade_frontalface_default.xml')
+    #face_cascade = cv.CascadeClassifier('.\\venv\\Lib\\site-packages\\cv2\\data\\haarcascade_frontalface_default.xml')
+    face_cascade = cv.CascadeClassifier('.\\haarcascades\\haarcascade_frontalface_default.xml')
     number = 0
     while number < frames:
         img = cv.imread('.\\Frames\\' + str(number)+".jpg")
@@ -133,19 +135,21 @@ def extract_data_from_file(path):
 ########################################################################################################################
 
 
-def kamerka():
+def kamerka(n_frames = 20):
     try:
         cap = cv.VideoCapture(0)
+        
         cap.set(3, 640)
         cap.set(4, 480)
-        face_cascade = cv.CascadeClassifier('.\\venv\\Lib\\site-packages\\cv2\\data\\haarcascade_frontalface_default.xml')
+        face_cascade = cv.CascadeClassifier('.\\haarcascades\\haarcascade_frontalface_default.xml')
+        #face_cascade = cv.CascadeClassifier('.\\venv\\Lib\\site-packages\\cv2\\data\\haarcascade_frontalface_default.xml')
         i = 0
 
     except:
         print("problem opening input stream")
         exit(1)
 
-    while i < 20:
+    while i < n_frames:
         ret, frame = cap.read()
         if not ret:
             exit(0)
@@ -153,18 +157,32 @@ def kamerka():
         faces = face_cascade.detectMultiScale(gray, 1.3, 5)
         print(len(faces))
 
+        face_img = frame
         for (x, y, w, h) in faces:
+            face_img = frame[y:y+h,x:x+w]
             cv.rectangle(frame, (x, y), (x + w, y + h), (255, 0, 0), 2)
+            
+        resized_face = cv.resize(face_img, (48, 48)) 
+        canny_face = cv.Canny(resized_face, 100, 200)
+        x = np.reshape(canny_face, (1, 48*48))
+        x = np.array([[(number + 1) / 256.0 for number in numbers] for numbers in x])
+        print(x)
+        
+        predykcja = model.predict_classes(x)
+        tlumacz = ['smutek','radosc','obrzydzenie','wscieklosc','nwm1','nwm2','nwm3']
+        print(tlumacz[predykcja[0]])
+        cv.imshow('podglad', frame)
+        cv.imshow('canny_resized', canny_face)
 
-        cv.imshow('frame', frame)
-        cv.imwrite("image%04i.jpg" % i, frame)
+    
+        #cv.imwrite("image%04i.jpg" % i, frame)
         i += 1
         if cv.waitKey(1) & 0xFF == ord('q'):
             break
     cap.release()
     cv.destroyAllWindows()
 #####################################################################################################
-
+kamerka(400)
 
 path_film = '.\\Filmy\\MOV.mp4'
 path_dataset = '.\\dataset.csv'
@@ -172,7 +190,7 @@ path_dataset_canny = '.\\dataset_canny.csv'
 
 # frames_number = cut_frames(path_film, 5)
 # cut_faces(frames_number, 48, 48)
-tests(path_dataset, 1)
+#tests(path_dataset, 1)
 # tests(path_dataset_canny, 0)
 Y = []
 X = []

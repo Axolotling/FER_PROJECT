@@ -8,8 +8,8 @@ import matplotlib.pyplot as plt
 # PARAMETERS ------------------------------------------------------------------
 
 
-N_EPOCHS = 13
-BATCH_SIZE = 30000
+N_EPOCHS = 14
+BATCH_SIZE = 37000
 DATASET_PATH = 'dataset\dataset_canny.csv'
 
 
