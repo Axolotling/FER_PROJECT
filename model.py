@@ -2,13 +2,14 @@ import numpy as np
 import tensorflow as tf
 import csv
 import matplotlib.pyplot as plt
+import h5py
 #import pydot
 #import graphviz
 
 # PARAMETERS ------------------------------------------------------------------
 
 
-N_EPOCHS = 14
+N_EPOCHS = 20
 BATCH_SIZE = 37000
 DATASET_PATH = 'dataset\dataset_canny.csv'
 
@@ -76,7 +77,7 @@ def my_own_training(model, X, Y):
         
     print('loss')    
     plt.plot(loss_chart)
-    plt.show('loss per batch')   
+    plt.show('loss per batch')
     plt.plot(score_chart)
     print('loss from model.evaluate()')
     plt.show('score per batch')
@@ -90,6 +91,13 @@ model.compile(loss='binary_crossentropy', optimizer='adam', metrics=['accuracy']
 #my_own_training(model,X,Y)
 
 model.fit(X, Y, epochs=N_EPOCHS, BATCH_SIZE=BATCH_SIZE,  verbose=1, validation_split=0.2,shuffle = True)
+model_save_path = "model/saved_model.h5py"
+tf.keras.models.save_model(
+    model,
+    model_save_path,
+    overwrite=True,
+    include_optimizer=True
+)
 npredictions = model.predict(X[:40])
-
+#proba_predictions = tf.predict_proba(X[:40], batch_size=32, verbose=1)
 class_predictions = model.predict_classes(X[:40])

@@ -3,7 +3,9 @@ import numpy as np
 import cv2 as cv
 import os
 import linecache
-import model.py
+import tensorflow as tf
+import h5py
+#import model
 ########################################################################################################################
 
 
@@ -135,42 +137,97 @@ def extract_data_from_file(path):
 ########################################################################################################################
 
 
-def kamerka(n_frames = 20):
+def kamerka(model, n_frames = 20):
     try:
         cap = cv.VideoCapture(0)
         
         cap.set(3, 640)
         cap.set(4, 480)
-        face_cascade = cv.CascadeClassifier('.\\haarcascades\\haarcascade_frontalface_default.xml')
+        face_cascade = cv.CascadeClassifier('.\\haarcascades\\haarcascade_frontalface_alt2.xml')
         #face_cascade = cv.CascadeClassifier('.\\venv\\Lib\\site-packages\\cv2\\data\\haarcascade_frontalface_default.xml')
         i = 0
 
     except:
         print("problem opening input stream")
         exit(1)
-
+   # w, h = 20, 8;
+    tlumacz = ['wscieklosc','obrzydzenie','strach','radosc','smutek','zaskoczenie','neutralnosc']
+    
+    mark = [0,0,0,0,0,0,0]
+    
+  #  for i in range(0,19):
+    #    ostatnie_20_predykcji[i] = [0,0,0,0,0,0,0]
+    text = ''
+    texts = ['','','','','','','']
     while i < n_frames:
         ret, frame = cap.read()
+        frame = cv.flip(frame, 1)
         if not ret:
             exit(0)
         gray = cv.cvtColor(frame, cv.COLOR_BGR2GRAY)
         faces = face_cascade.detectMultiScale(gray, 1.3, 5)
-        print(len(faces))
+        #print(len(faces))
 
+        font                   = cv.FONT_HERSHEY_SIMPLEX       
+        fontScale              = 1
+        fontColor              = (255,255,255)
+        lineType               = 2
+     
+       
+
+
+        face_detected = False
         face_img = frame
         for (x, y, w, h) in faces:
             face_img = frame[y:y+h,x:x+w]
+            if (len(face_img) != len(frame)):
+                face_detected = True
+            cv.rectangle(frame, (x - 30, y + h + 5), (x + w + 30, y + h + 30 * len(texts)), (0, 0, 0),25)
             cv.rectangle(frame, (x, y), (x + w, y + h), (255, 0, 0), 2)
+            for i in range(len(texts)):
+                cv.putText(frame,texts[i], (x - 20,y+h +30 + 30 * i), font, 1/200 * w, fontColor, int(1/100 * w))#lineType)
             
-        resized_face = cv.resize(face_img, (48, 48)) 
+        resized_face = cv.resize(face_img, (54, 54)) 
         canny_face = cv.Canny(resized_face, 100, 200)
+        canny_face = canny_face[3:51,2:50]
         x = np.reshape(canny_face, (1, 48*48))
         x = np.array([[(number + 1) / 256.0 for number in numbers] for numbers in x])
-        print(x)
         
-        predykcja = model.predict_classes(x)
-        tlumacz = ['smutek','radosc','obrzydzenie','wscieklosc','nwm1','nwm2','nwm3']
-        print(tlumacz[predykcja[0]])
+        
+        print(np.shape(x))
+        print(x)
+        #print(X[0])
+        
+       
+        
+        if(face_detected):
+            #return
+            pred = model.predict(x)
+            predykcja = model.predict_classes(x)
+            
+            for i in range(0, len(mark)):
+                mark[i] = (mark[i]*9+pred[0][i])/10
+            
+            text = tlumacz[predykcja[0]]
+           
+            for i in range(0, len(mark)):
+                texts[i] = (tlumacz[i]+' '+ str(int(mark[i]*100))+'%')
+            #print(tlumacz[predykcja[0]])
+            #print(model.predict(x))
+           
+           # ostatnie_20_predykcji =  ostatnie_20_predykcji[1:]
+           # ostatnie_20_predykcji.insert(19,cala_predykcja[0])
+            
+           # avg = []
+          #  for j in range(0,len(cala_predykcja[0]) - 1):
+           #     for i in range(0,20):                
+            #        avg[j] += ostatnie_20_predykcji[i][j]
+           #     avg[j] /= 20
+           # print(cala_predykcja)
+            
+             
+           # for i in range(0,len(cala_predykcja[0]) - 1):            
+           #     print(tlumacz[i],': ', int(avg[i]*100),'%')
         cv.imshow('podglad', frame)
         cv.imshow('canny_resized', canny_face)
 
@@ -182,7 +239,10 @@ def kamerka(n_frames = 20):
     cap.release()
     cv.destroyAllWindows()
 #####################################################################################################
-kamerka(400)
+model_save_path = "model/saved_model.h5py"
+model = tf.keras.models.load_model(model_save_path, custom_objects=None, compile=False)
+
+kamerka(model, 1000)
 
 path_film = '.\\Filmy\\MOV.mp4'
 path_dataset = '.\\dataset.csv'
@@ -192,6 +252,6 @@ path_dataset_canny = '.\\dataset_canny.csv'
 # cut_faces(frames_number, 48, 48)
 #tests(path_dataset, 1)
 # tests(path_dataset_canny, 0)
-Y = []
-X = []
+#Y = []
+#X = []
 # extract_data_from_file(path_dataset)
