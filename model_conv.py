@@ -9,9 +9,9 @@ import h5py
 # PARAMETERS ------------------------------------------------------------------
 
 
-N_EPOCHS = 10
-BATCH_SIZE = 37000
-DATASET_PATH = 'dataset\dataset_canny.csv'
+N_EPOCHS = 4
+BATCH_SIZE = 1000
+DATASET_PATH = 'dataset\\fer2013.csv'
 
 
 
@@ -31,7 +31,10 @@ def extract_data_from_file(path):
             Y.append(tmp_list)     
             tmp_list = list(map(int,row[1].split()))
             tmp_list = [(x+1)/256.0 for x in tmp_list]
-            X.append(tmp_list)
+            tmp_matrix = np.reshape(tmp_list,(48,48,1))
+            #np.reshape()
+            
+            X.append(tmp_matrix)
             
             if(row_counter >= n_rows):
                 return
@@ -48,11 +51,14 @@ if (data_extracted == False):
 
 
 model = tf.keras.Sequential([
-  tf.keras.layers.Dense(1000, "sigmoid", input_shape=(48*48,)),  # intput shape required
-  #tf.keras.layers.Conv2D(1, [3,3], strides=(1, 1), padding='valid', data_format=None, dilation_rate=(1, 1), activation=None, use_bias=True, kernel_initializer='glorot_uniform', bias_initializer='zeros', kernel_regularizer=None, bias_regularizer=None, activity_regularizer=None, kernel_constraint=None, bias_constraint=None),
-  tf.keras.layers.Dense(400, "relu"),
-  tf.keras.layers.Dense(100, "relu"),
-  tf.keras.layers.Dense(25, "relu"),
+  #tf.keras.layers.Dense(1000, "sigmoid", input_shape=(48,48,)),  # intput shape required
+  tf.keras.layers.Conv2D(1, [3,3], strides=(1, 1), padding='valid', input_shape=(None,48,48), data_format=None, dilation_rate=(1, 1), activation=None, use_bias=True, kernel_initializer='glorot_uniform', bias_initializer='zeros', kernel_regularizer=None, bias_regularizer=None, activity_regularizer=None, kernel_constraint=None, bias_constraint=None),
+  tf.keras.layers.Conv2D(1, [3,3], strides=(1, 1), padding='valid', data_format=None, dilation_rate=(1, 1), activation=None, use_bias=True, kernel_initializer='glorot_uniform', bias_initializer='zeros', kernel_regularizer=None, bias_regularizer=None, activity_regularizer=None, kernel_constraint=None, bias_constraint=None),
+  tf.keras.layers.Conv2D(1, [3,3], strides=(1, 1), padding='valid', data_format=None, dilation_rate=(1, 1), activation=None, use_bias=True, kernel_initializer='glorot_uniform', bias_initializer='zeros', kernel_regularizer=None, bias_regularizer=None, activity_regularizer=None, kernel_constraint=None, bias_constraint=None),
+  tf.keras.layers.Conv2D(1, [3,3], strides=(1, 1), padding='valid', data_format=None, dilation_rate=(1, 1), activation=None, use_bias=True, kernel_initializer='glorot_uniform', bias_initializer='zeros', kernel_regularizer=None, bias_regularizer=None, activity_regularizer=None, kernel_constraint=None, bias_constraint=None),
+  #tf.keras.layers.Dense(400, "relu"),
+  #tf.keras.layers.Dense(100, "relu"),
+  #tf.keras.layers.Dense(25, "relu"),
   tf.keras.layers.Dense(8, "sigmoid")
 ])
 
@@ -90,8 +96,8 @@ model.compile(loss='binary_crossentropy', optimizer='adam', metrics=['accuracy']
 
 #my_own_training(model,X,Y)
 
-model.fit(X, Y, epochs=N_EPOCHS, BATCH_SIZE=BATCH_SIZE,  verbose=1, validation_split=0.2,shuffle = True)
-model_save_path = "model/saved_model.h5py"
+model.fit(np.array(X[:1]), Y, epochs=N_EPOCHS, BATCH_SIZE=BATCH_SIZE,  verbose=1, validation_split=0.2,shuffle = True)
+model_save_path = "model/saved_model_conv.h5py"
 tf.keras.models.save_model(
     model,
     model_save_path,
@@ -100,4 +106,5 @@ tf.keras.models.save_model(
 )
 npredictions = model.predict(X[:40])
 #proba_predictions = tf.predict_proba(X[:40], batch_size=32, verbose=1)
-class_predictions = model.predict_classes(X[:40])
+class_predictions = model.predict_classes(X[:40])# -*- coding: utf-8 -*-
+
