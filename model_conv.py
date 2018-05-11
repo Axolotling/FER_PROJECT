@@ -1,17 +1,34 @@
 import numpy as np
 import tensorflow as tf
-import csv
+import keras
+from keras.layers import Conv2D, MaxPooling2D, Dense, Flatten, Dropout
+
+from keras import Sequential
+from keras.layers import Conv2D, MaxPooling2D, Dense, Flatten, Dropout
+from keras.optimizers import Adam
+from keras.callbacks import TensorBoard
+
+import pandas as pd
 import matplotlib.pyplot as plt
+#from sklearn.model_selection import train_test_split
+
+import csv
 import h5py
+# PARAMETERS ------------------------------------------------------------------
 #import pydot
 #import graphviz
 
-# PARAMETERS ------------------------------------------------------------------
+
+im_rows = 48
+im_cols = 48
+
+im_shape = (im_rows, im_cols, 1)
 
 
-N_EPOCHS = 4
-BATCH_SIZE = 1000
-DATASET_PATH = 'dataset\\fer2013.csv'
+
+N_EPOCHS = 10
+BATCH_SIZE = 4444
+DATASET_PATH = 'dataset\\dataset.csv'
 
 
 
@@ -26,14 +43,14 @@ def extract_data_from_file(path):
         for row in readcsv:
             row_counter += 1
             #Y.append(int(row[0]))
-            tmp_list = [0,0,0,0,0,0,0,0]
-            tmp_list[int(row[0])] = 1
-            Y.append(tmp_list)     
+           # tmp_list = [0,0,0,0,0,0,0,0]
+           # tmp_list[int(row[0])] = 1
+            Y.append(int(row[0]))     
             tmp_list = list(map(int,row[1].split()))
             tmp_list = [(x+1)/256.0 for x in tmp_list]
-            tmp_matrix = np.reshape(tmp_list,(48,48,1))
+            tmp_matrix = np.reshape(tmp_list,im_shape)
             #np.reshape()
-            
+                
             X.append(tmp_matrix)
             
             if(row_counter >= n_rows):
@@ -44,67 +61,71 @@ if (data_extracted == False):
     X = []   
     extract_data_from_file(DATASET_PATH)
     data_extracted = True
-        
-
-
+    X = np.array(X)
+    Y = np.array(Y)
+    
+print('X shape: {}'.format(X.shape))
+print('Y shape: {}'.format(Y.shape))
 # DEFING MODEL ----------------------------------------------------------------
 
+#image = X[151, :].reshape((48, 48))
+#plt.imshow(image)
+#plt.show()
 
-model = tf.keras.Sequential([
-  #tf.keras.layers.Dense(1000, "sigmoid", input_shape=(48,48,)),  # intput shape required
-  tf.keras.layers.Conv2D(1, [3,3], strides=(1, 1), padding='valid', input_shape=(None,48,48), data_format=None, dilation_rate=(1, 1), activation=None, use_bias=True, kernel_initializer='glorot_uniform', bias_initializer='zeros', kernel_regularizer=None, bias_regularizer=None, activity_regularizer=None, kernel_constraint=None, bias_constraint=None),
-  tf.keras.layers.Conv2D(1, [3,3], strides=(1, 1), padding='valid', data_format=None, dilation_rate=(1, 1), activation=None, use_bias=True, kernel_initializer='glorot_uniform', bias_initializer='zeros', kernel_regularizer=None, bias_regularizer=None, activity_regularizer=None, kernel_constraint=None, bias_constraint=None),
-  tf.keras.layers.Conv2D(1, [3,3], strides=(1, 1), padding='valid', data_format=None, dilation_rate=(1, 1), activation=None, use_bias=True, kernel_initializer='glorot_uniform', bias_initializer='zeros', kernel_regularizer=None, bias_regularizer=None, activity_regularizer=None, kernel_constraint=None, bias_constraint=None),
-  tf.keras.layers.Conv2D(1, [3,3], strides=(1, 1), padding='valid', data_format=None, dilation_rate=(1, 1), activation=None, use_bias=True, kernel_initializer='glorot_uniform', bias_initializer='zeros', kernel_regularizer=None, bias_regularizer=None, activity_regularizer=None, kernel_constraint=None, bias_constraint=None),
-  #tf.keras.layers.Dense(400, "relu"),
-  #tf.keras.layers.Dense(100, "relu"),
-  #tf.keras.layers.Dense(25, "relu"),
-  tf.keras.layers.Dense(8, "sigmoid")
+old_model = Sequential([
+    Conv2D(filters=32, kernel_size=3, activation='relu', input_shape=im_shape),
+    MaxPooling2D(pool_size=2),
+    Dropout(0.2),    
+    Flatten(),
+    Dense(32, activation='relu'),
+    Dense(8, activation='softmax')
 ])
 
-    
-    
-#tf.keras.utils.plot_model(model)
+old_model2 = Sequential([
+    Conv2D(filters=32, kernel_size=3, activation='relu', kernel_initializer ='he_normal', input_shape=im_shape),
+    MaxPooling2D(pool_size=2),
+    Dropout(0.2),    
+    Conv2D(filters=64, kernel_size=3, activation='relu', input_shape=im_shape),   
+    Dropout(0.25),    
+    Flatten(),
+    Dense(64, activation='relu'),
+    Dense(8, activation='softmax')
+])    
 
-# Training --------------------------------------------------------------------
-
-def my_own_training(model, X, Y):
-    n_batches = 100
-    batch_size = 100
-    loss_chart = []
-    score_chart = []
-    plt.axis([0, n_batches, 0, 1])
-    #plt.show()
-    for i in range(0,n_batches):
-        a,b = model.train_on_batch(X[i*batch_size:(i+1)*batch_size],Y[i*batch_size:(i+1)*batch_size])       
-        loss_chart.append(a)
-        score = model.evaluate(X[n_batches*batch_size:n_batches*batch_size + 50], Y[n_batches*batch_size:n_batches*batch_size + 50], verbose=0)
-        score_chart.append(score[0])    
-        
-    print('loss')    
-    plt.plot(loss_chart)
-    plt.show('loss per batch')
-    plt.plot(score_chart)
-    print('loss from model.evaluate()')
-    plt.show('score per batch')
-   
+model = Sequential([
+    Conv2D(filters=32, kernel_size=3, activation='relu', kernel_initializer ='he_normal', input_shape=im_shape),
+    MaxPooling2D(pool_size=2),
+    Dropout(0.25),    
+    Conv2D(filters=64, kernel_size=3, activation='relu', input_shape=im_shape),   
+    Dropout(0.25),    
+    Conv2D(filters=128, kernel_size=3, activation='relu', input_shape=im_shape),   
+    Dropout(0.4),    
+    Flatten(),
+    Dense(128, activation='relu'),
+    Dense(32, activation='relu'),
+    Dense(8, activation='softmax')
+])    
     
-    
-# Compile model
-#sgd = tf.keras.optimizers.SGD(lr=0.01, decay=1e-6, momentum=0.9, nesterov=True)
-model.compile(loss='binary_crossentropy', optimizer='adam', metrics=['accuracy'])
-
-#my_own_training(model,X,Y)
-
-model.fit(np.array(X[:1]), Y, epochs=N_EPOCHS, BATCH_SIZE=BATCH_SIZE,  verbose=1, validation_split=0.2,shuffle = True)
-model_save_path = "model/saved_model_conv.h5py"
-tf.keras.models.save_model(
-    model,
-    model_save_path,
-    overwrite=True,
-    include_optimizer=True
+tensorboard = TensorBoard(
+    log_dir=r'logs\{}'.format('cnn_1layer'),
+    write_graph=True,
+    write_grads=True,
+    histogram_freq=1,
+    write_images=True,
 )
-npredictions = model.predict(X[:40])
-#proba_predictions = tf.predict_proba(X[:40], batch_size=32, verbose=1)
-class_predictions = model.predict_classes(X[:40])# -*- coding: utf-8 -*-
 
+model.compile(
+    loss='sparse_categorical_crossentropy',
+    optimizer=Adam(lr=0.001),
+    metrics=['accuracy']
+)
+
+model.fit(
+    X, Y, batch_size=BATCH_SIZE,
+    epochs=N_EPOCHS, verbose=1,
+    validation_split=0.1,
+    callbacks=[tensorboard]
+)
+
+#npredictions = model.predict(X[:40])
+class_predictions = model.predict_classes(X[:40])
